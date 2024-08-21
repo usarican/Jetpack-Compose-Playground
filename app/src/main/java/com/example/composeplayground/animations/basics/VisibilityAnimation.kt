@@ -48,7 +48,7 @@ fun VisibilityAnimationScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(250.dp)
-                .background(Color.LightGray)
+                .background(Color.Blue)
                 .clickable {
                     visible = !visible
                 }
