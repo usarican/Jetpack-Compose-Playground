@@ -9,6 +9,7 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -39,6 +40,9 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.style.TextMotion
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 
 @Composable
 fun CircleProgressBarAnimation(
@@ -51,9 +55,26 @@ fun CircleProgressBarAnimation(
 
     ) {
         var progress by remember { mutableFloatStateOf(0f) }
+        var currentProgress by remember { mutableFloatStateOf(0f) }
 
         val animatedProgress = remember {
             Animatable(0f)
+        }
+
+        val animatedScale = remember {
+            Animatable(0f)
+        }
+        LaunchedEffect(progress) {
+            animatedScale.snapTo(0f)
+            animatedScale.animateTo(
+                targetValue = (progress.toInt() / 100.0).toFloat() + 1.5f,
+                animationSpec = tween(1500),
+            )
+        }
+        LaunchedEffect(key1 = progress) {
+            progressFlow(progress).collect {
+                currentProgress = it.toFloat()
+            }
         }
 
         LaunchedEffect(progress) {
@@ -82,11 +103,12 @@ fun CircleProgressBarAnimation(
                 size = 128.dp
             )
             ProgressTextAnimation(
-                progress = progress,
+                progress = currentProgress,
                 modifier = Modifier
                     .wrapContentSize()
                     .align(Alignment.Center),
-                animatedColor = animatedColor
+                animatedColor = animatedColor,
+                animatedScale = animatedScale
             )
         }
         Spacer(
@@ -106,18 +128,9 @@ fun CircleProgressBarAnimation(
 fun ProgressTextAnimation(
     progress: Float,
     animatedColor: Color,
+    animatedScale: Animatable<Float, *>,
     modifier: Modifier = Modifier
 ){
-    val animatedScale = remember {
-        Animatable(0f)
-    }
-    LaunchedEffect(progress) {
-        animatedScale.snapTo(0f)
-        animatedScale.animateTo(
-            targetValue = (progress.toInt() / 100.0).toFloat() + 1.5f,
-            animationSpec = tween(1000),
-        )
-    }
     Text(
         text ="${(progress).toInt()}%",
         color = animatedColor,
@@ -140,7 +153,7 @@ fun CircleProgressAnimation(
     animatedProgress: Animatable<Float, *>,
 ) {
 
-    Canvas(modifier = Modifier.size(size)) {
+    Canvas(modifier = Modifier.size(size).background(Color.LightGray)) {
         drawArc(
             color = backgroundArcColor,
             startAngle = 0f,
@@ -159,5 +172,16 @@ fun CircleProgressAnimation(
             size = Size(size.toPx(), size.toPx()),
             style = Stroke(width = strokeWidth.toPx(), cap = StrokeCap.Round)
         )
+    }
+}
+
+fun progressFlow(targetProgress: Float) : Flow<Int> {
+    return flow {
+        var progress = 0f
+        while (progress <= targetProgress) {
+            emit(progress.toInt())
+            progress += 1f
+            delay(20)
+        }
     }
 }
