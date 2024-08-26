@@ -3,6 +3,8 @@ package com.example.composeplayground.animations.customAnimations
 import android.util.Log
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
@@ -24,7 +26,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.TransformOrigin
@@ -52,6 +56,10 @@ fun CircleProgressBarAnimation(
             Animatable(0f)
         }
 
+        val shimmerAnimatedProgress = remember {
+            Animatable(0f)
+        }
+
         val animatedScale = remember {
             Animatable(0f)
         }
@@ -64,7 +72,7 @@ fun CircleProgressBarAnimation(
                 )
             }
             launch {
-                progressFlow(progress,1500).collect {
+                progressFlow(progress, 1500).collect {
                     currentProgress = it.toFloat()
                 }
             }
@@ -74,6 +82,16 @@ fun CircleProgressBarAnimation(
                     targetValue = progress,
                     animationSpec = tween(1500),
                 )
+                shimmerAnimatedProgress.animateTo(
+                    targetValue = progress,
+                    animationSpec = infiniteRepeatable(
+                        animation = tween(750),
+                        repeatMode = RepeatMode.Restart
+                    )
+                )
+            }
+            launch {
+                shimmerAnimatedProgress.snapTo(0f)
             }
         }
 
@@ -98,6 +116,15 @@ fun CircleProgressBarAnimation(
                 size = 128.dp,
                 modifier = Modifier.align(Alignment.Center)
             )
+            if (!animatedProgress.isRunning){
+                ShimmerEffectArc(
+                    shimmerProgress = shimmerAnimatedProgress,
+                    animatedColor = animatedColor,
+                    progress = progress,
+                    size = 128.dp,
+                    modifier = Modifier.align(Alignment.Center)
+                )
+            }
             ProgressTextAnimation(
                 progress = currentProgress,
                 modifier = Modifier
@@ -108,7 +135,9 @@ fun CircleProgressBarAnimation(
             )
 
             Button(
-                modifier = Modifier.align(Alignment.BottomCenter).padding(32.dp),
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(32.dp),
                 onClick = {
                     progress = (Math.random() * 100).toInt().toFloat()
                 }) {
@@ -149,7 +178,6 @@ fun CircleProgressAnimation(
     animatedProgress: Animatable<Float, *>,
     modifier: Modifier = Modifier
 ) {
-
     Canvas(
         modifier = modifier
             .size(size)
@@ -168,7 +196,7 @@ fun CircleProgressAnimation(
             color = animatedColor,
             startAngle = -90f,
             sweepAngle = (animatedProgress.value / 100) * 360f,
-            alpha = 0.8f,
+            alpha = 1f,
             useCenter = false,
             size = Size(size.toPx(), size.toPx()),
             style = Stroke(width = strokeWidth.toPx(), cap = StrokeCap.Round)
@@ -176,7 +204,43 @@ fun CircleProgressAnimation(
     }
 }
 
-fun progressFlow(targetProgress: Float,totalTime : Long): Flow<Int> {
+@Composable
+fun ShimmerEffectArc(
+    size: Dp = 96.dp,
+    strokeWidth: Dp = 12.dp,
+    shimmerProgress: Animatable<Float, *>,
+    progress: Float,
+    modifier: Modifier = Modifier,
+    animatedColor: Color
+) {
+    val shimmerColors = listOf(
+        Color.White.copy(alpha = 0.15f),
+        Color.White.copy(alpha = 0.3f),
+        Color.White.copy(alpha = 0.5f),
+        Color.White.copy(alpha = 0.3f),
+        Color.White.copy(alpha = 0.15f),
+    )
+
+    val brush = Brush.linearGradient(
+        colors = shimmerColors,
+        start = Offset(x = 100f, y = 0.0f),
+        end = Offset(x = 400f, y = 270f),
+    )
+
+    Canvas(modifier = modifier.size(size)) {
+        drawArc(
+            brush = brush,
+            startAngle = if (-90f + (((shimmerProgress.value / 100) * 360f) - ((progress / 100) * 45f)) < -90f) -90f else -90f + (((shimmerProgress.value / 100) * 360f) - ((progress / 100) * 45f)),
+            sweepAngle = (progress / 100) * 45f,
+            alpha = 1f,
+            useCenter = false,
+            size = Size(size.toPx(), size.toPx()),
+            style = Stroke(width = strokeWidth.toPx(), cap = StrokeCap.Round)
+        )
+    }
+}
+
+fun progressFlow(targetProgress: Float, totalTime: Long): Flow<Int> {
     return flow {
         var progress = 0f
         while (progress <= targetProgress) {
