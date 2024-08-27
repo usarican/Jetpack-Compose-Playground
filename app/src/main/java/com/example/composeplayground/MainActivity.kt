@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.composeplayground.animations.basics.VisibilityAnimationScreen
 import com.example.composeplayground.animations.customAnimations.CircleProgressBarAnimation
+import com.example.composeplayground.animations.customAnimations.CustomProgressBar
 import com.example.composeplayground.ui.theme.ComposePlaygroundTheme
 
 class MainActivity : ComponentActivity() {
@@ -22,7 +23,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             ComposePlaygroundTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    CircleProgressBarAnimation(
+                    CustomProgressBar(
                         modifier = Modifier.padding(innerPadding)
                     )
                 }
