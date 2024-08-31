@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.composeplayground.animations.basics.VisibilityAnimationScreen
 import com.example.composeplayground.animations.customAnimations.CustomProgressBar
+import com.example.composeplayground.gestures.CustomSwipeToDeleteItem
 import com.example.composeplayground.gestures.TransformableView
 import com.example.composeplayground.ui.theme.ComposePlaygroundTheme
 
@@ -24,7 +25,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             ComposePlaygroundTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    TransformableView( modifier = Modifier.padding(innerPadding))
+                    CustomSwipeToDeleteItem(modifier = Modifier.padding(innerPadding))
                 }
             }
         }
