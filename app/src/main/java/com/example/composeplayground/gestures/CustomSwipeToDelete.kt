@@ -55,7 +55,7 @@ fun CustomSwipeToDeleteItem(
         modifier.fillMaxSize(),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        items(1){ index ->
+        items(10){ index ->
             SwipeItem(
                 itemIdx = index,
             )
